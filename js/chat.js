@@ -1214,16 +1214,40 @@ function openReportWindow() {
 
 // Función global para ejecutar pruebas exhaustivas (delegación al chat)
 async function ejecutarPruebasExhaustivas() {
+    console.log('🔬 Función global ejecutarPruebasExhaustivas llamada');
+    console.log('Chat disponible:', !!window.bcr_chat);
+    console.log('Método disponible:', !!(window.bcr_chat && typeof window.bcr_chat.ejecutarPruebasExhaustivas === 'function'));
+    
     if (window.bcr_chat && typeof window.bcr_chat.ejecutarPruebasExhaustivas === 'function') {
         try {
+            console.log('✅ Ejecutando pruebas exhaustivas...');
             await window.bcr_chat.ejecutarPruebasExhaustivas();
         } catch (error) {
-            console.error('Error ejecutando pruebas exhaustivas desde función global:', error);
-            alert('Error ejecutando las pruebas exhaustivas. Por favor, intenta de nuevo.');
+            console.error('❌ Error ejecutando pruebas exhaustivas desde función global:', error);
+            alert('Error ejecutando las pruebas exhaustivas. Por favor, intenta de nuevo.\n\nDetalles: ' + error.message);
         }
     } else {
-        console.error('Chat no inicializado o método no disponible');
-        alert('El sistema de chat no está listo. Por favor, recarga la página e intenta de nuevo.');
+        console.error('❌ Chat no inicializado o método no disponible');
+        console.log('Intentando reinicializar chat...');
+        
+        // Intentar reinicializar el chat
+        try {
+            if (typeof BCRChat !== 'undefined') {
+                window.bcr_chat = new BCRChat();
+                if (window.bcr_chat && typeof window.bcr_chat.ejecutarPruebasExhaustivas === 'function') {
+                    console.log('✅ Chat reinicializado, ejecutando pruebas...');
+                    await window.bcr_chat.ejecutarPruebasExhaustivas();
+                    return;
+                }
+            }
+        } catch (reinitError) {
+            console.error('❌ Error reinicializando chat:', reinitError);
+        }
+        
+        alert('El sistema de chat no está listo. Por favor, recarga la página e intenta de nuevo.\n\n' +
+              'Detalles técnicos:\n' +
+              '- Chat disponible: ' + (!!window.bcr_chat) + '\n' +
+              '- Método disponible: ' + (!!(window.bcr_chat && typeof window.bcr_chat.ejecutarPruebasExhaustivas === 'function')));
     }
 }
 
