@@ -3,9 +3,27 @@ let bcr_chat = null; // Variable global para acceso desde botones
 
 class BCRChat {
     constructor() {
+        console.log('🎯 Inicializando BCRChat...');
+        
         this.chatContainer = document.getElementById('chat');
         this.form = document.getElementById('chatForm');
         this.input = document.getElementById('input');
+        
+        if (!this.chatContainer) {
+            console.error('❌ Elemento #chat no encontrado');
+            return;
+        }
+        if (!this.form) {
+            console.error('❌ Elemento #chatForm no encontrado');
+            return;
+        }
+        if (!this.input) {
+            console.error('❌ Elemento #input no encontrado');
+            return;
+        }
+        
+        console.log('✅ Elementos del DOM encontrados correctamente');
+        
         this.userData = {};
         this.currentStep = 1;
         this.isValidating = false;
@@ -13,6 +31,7 @@ class BCRChat {
         this.waitingFor = 'nombre';
         
         this.init();
+        console.log('✅ BCRChat inicializado correctamente');
     }
 
     init() {
@@ -1166,7 +1185,22 @@ ${data.detailed_results ? data.detailed_results.map(test =>
 
 // Inicializar chat cuando la página esté lista
 document.addEventListener('DOMContentLoaded', () => {
-    bcr_chat = new BCRChat(); // Asignar a variable global
+    console.log('📄 DOM Content Loaded, inicializando chat...');
+    
+    try {
+        bcr_chat = new BCRChat(); // Asignar a variable global
+        console.log('✅ Chat inicializado exitosamente');
+        
+        // Confirmar que el chat está disponible globalmente
+        if (window.bcr_chat) {
+            console.log('✅ bcr_chat disponible globalmente');
+        } else {
+            console.warn('⚠️ bcr_chat no está disponible globalmente');
+            window.bcr_chat = bcr_chat; // Asegurar que esté disponible
+        }
+    } catch (error) {
+        console.error('❌ Error inicializando chat:', error);
+    }
 });
 
 // Funciones globales para compatibilidad
