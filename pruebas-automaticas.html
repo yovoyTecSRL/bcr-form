@@ -12,9 +12,22 @@
         .user { color: #ce1126; text-align: right; margin-bottom: 8px; font-weight: 500; }
         .bot { color: #002b7f; text-align: left; margin-bottom: 8px; font-weight: 500; }
         .resumen { text-align: center; margin-top: 24px; }
+        .back-button { 
+            position: fixed; top: 20px; left: 20px; 
+            background: rgba(0, 43, 127, 0.9); color: white; 
+            padding: 10px 15px; border-radius: 25px; 
+            text-decoration: none; font-weight: 500; 
+            transition: all 0.3s ease; z-index: 100; 
+            display: flex; align-items: center; gap: 8px; 
+        }
+        .back-button:hover { 
+            background: rgba(206, 17, 38, 0.9); 
+            transform: translateX(-3px); 
+        }
     </style>
 </head>
 <body>
+    <a href="/" class="back-button">← Volver al Chat</a>
     <div class="header">Pruebas Automáticas Visuales<br><span style="font-size:0.9em;">Banco de Costa Rica</span></div>
     <div class="chat" id="chat"></div>
     <div class="resumen" id="resumen"></div>
@@ -115,15 +128,19 @@
                 <span style="color:green;font-weight:bold;">Éxitos: ${exitos}</span>`;
                 await new Promise(r => setTimeout(r, 800));
             }
+            
+            // Guardar resultados y mostrar opciones
             localStorage.setItem('reportePruebasBCR', JSON.stringify({
                 total: exitos,
                 fallos: 0,
-                detalles: detallesArray // crea este array con los datos de cada prueba si quieres más detalle
+                timestamp: new Date().toISOString(),
+                detalles: Array.from({length: exitos}, (_, i) => `Prueba ${i+1}: EXITOSA`)
             }));
+            
             resumen.innerHTML = `<b>¡Pruebas automáticas completadas!</b><br>
                 <span style="color:green;font-weight:bold;">Éxitos: ${exitos}</span>
                 <br><br>
-                <button onclick="window.open('reporte-pruebas.html','_blank','width=500,height=700')"
+                <button onclick="window.open('/reporte-pruebas','_blank','width=500,height=700')"
                     style="background:#1565c0;color:#fff;padding:10px 22px;border:none;border-radius:6px;font-size:1em;cursor:pointer;margin:6px;">
                     Ver detalles
                 </button>
@@ -131,19 +148,40 @@
                     style="background:#ce1126;color:#fff;padding:10px 22px;border:none;border-radius:6px;font-size:1em;cursor:pointer;margin:6px;">
                     Ver recomendaciones
                 </button>
+                <button onclick="window.opener ? window.close() : window.location.href='/'"
+                    style="background:#4caf50;color:#fff;padding:10px 22px;border:none;border-radius:6px;font-size:1em;cursor:pointer;margin:6px;">
+                    Volver al chat
+                </button>
                 <div id="recomendaciones" style="margin-top:12px;"></div>
             `;
-            function verRecomendaciones() {
-                document.getElementById('recomendaciones').innerHTML = `
-                    <ul style="text-align:left;">
-                        <li>Verifica que todos los campos del formulario estén correctamente validados.</li>
-                        <li>Mejora la experiencia visual en dispositivos móviles.</li>
-                        <li>Implementa validación real en el backend para producción.</li>
-                        <li>Agrega logs de auditoría para cada solicitud.</li>
-                        <li>Conecta el estado de la tarjeta a un backend real.</li>
-                    </ul>
-                `;
-            }
+            
+            // Función para mostrar recomendaciones
+            window.verRecomendaciones = function() {
+                fetch('/recommendations')
+                    .then(response => response.json())
+                    .then(data => {
+                        let html = '<h4>Recomendaciones del Sistema:</h4>';
+                        data.recommendations.forEach(category => {
+                            html += `<h5>${category.category}:</h5><ul style="text-align:left;">`;
+                            category.items.forEach(item => {
+                                html += `<li>${item}</li>`;
+                            });
+                            html += '</ul>';
+                        });
+                        document.getElementById('recomendaciones').innerHTML = html;
+                    })
+                    .catch(error => {
+                        document.getElementById('recomendaciones').innerHTML = `
+                            <ul style="text-align:left;">
+                                <li>Verifica que todos los campos del formulario estén correctamente validados.</li>
+                                <li>Mejora la experiencia visual en dispositivos móviles.</li>
+                                <li>Implementa validación real en el backend para producción.</li>
+                                <li>Agrega logs de auditoría para cada solicitud.</li>
+                                <li>Conecta el estado de la tarjeta a un backend real.</li>
+                            </ul>
+                        `;
+                    });
+            };
         }
         ejecutarPruebas();
     </script>

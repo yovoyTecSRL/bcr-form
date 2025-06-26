@@ -24,8 +24,57 @@
     </div>
 
     <div class="nav" >
-        <a href="./pruebas-automaticas.html" class="button">Ver Pruebas</a>
-        <a href="./reporte-pruebas.html" class="button">Ver Reportes</a>
+        <a href="./pruebas-automaticas" class="button">🧪 Ver Pruebas Automáticas</a>
+        <a href="./reporte-pruebas" class="button">📊 Ver Reportes</a>
+        <button onclick="mostrarGuiaChat()" class="button guide-button">🤖 Guía con Chat IA</button>
+        <button onclick="ejecutarPruebasExhaustivas()" class="button ai-test-button">🔬 Pruebas IA Exhaustivas</button>
+        <button onclick="ejecutarPruebas()" class="button test-button">⚡ Ejecutar Pruebas</button>
+    </div>
+
+    <!-- Modal para Pruebas Exhaustivas -->
+    <div id="pruebasModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🤖 IA Ejecutando Pruebas Exhaustivas</h3>
+            </div>
+            <div class="modal-body">
+                <div class="ai-analysis-progress">
+                    <div class="progress-spinner"></div>
+                    <p id="progress-text">Iniciando análisis de seguridad...</p>
+                    <div class="progress-details">
+                        <small id="progress-detail">Preparando entorno de pruebas...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Guía de Chat IA -->
+    <div id="guiaModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🤖 Asistente Virtual BCR</h3>
+                <span class="close" onclick="cerrarGuiaChat()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="chatGuia" class="chat-guia">
+                    <div class="message bot">
+                        <p>¡Hola! Soy tu asistente virtual del Banco de Costa Rica. ¿En qué puedo ayudarte?</p>
+                        <small>Puedes preguntarme sobre:</small>
+                        <ul>
+                            <li>Cómo llenar el formulario de solicitud</li>
+                            <li>Requisitos para tarjetas de crédito</li>
+                            <li>Documentos necesarios</li>
+                            <li>Proceso de validación</li>
+                        </ul>
+                    </div>
+                </div>
+                <form id="guiaForm" class="guia-form">
+                    <input type="text" id="guiaInput" placeholder="Escribe tu pregunta..." autocomplete="off" required />
+                    <button type="submit">Enviar</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div class="container">
@@ -48,260 +97,325 @@
         &copy; 2025 Banco Validación. Todos los derechos reservados.
     </div>
     <div style="text-align:center; margin-top:24px;">
+        <button onclick="ejecutarPruebas()" style="background:#1565c0;color:#fff;padding:10px 20px;border:none;border-radius:6px;margin:5px;cursor:pointer;">
+            Ejecutar Pruebas Automáticas
+        </button>
+        <button onclick="verRecomendaciones()" style="background:#ce1126;color:#fff;padding:10px 20px;border:none;border-radius:6px;margin:5px;cursor:pointer;">
+            Ver Recomendaciones
+        </button>
         <div id="resultados-pruebas" style="margin-top:18px; color:#222; font-size:1.05em;"></div>
-    </div>
-    
+    </div>    <script src="./js/chat.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const chat = document.getElementById("chat");
-            const form = document.getElementById("chatForm");
-            const input = document.getElementById("input");
+        // Sistema de Guía de Chat IA
+        let guiaChat = null;
         
-            let paso = 1;
-            let datos = {};
-            let validando = false;
-            let validacionCompletada = false;
-            let flujoFinalizado = false;
-            let indexValidacion = 0;
-            const secuencia = ["CCSS", "BCR", "HACIENDA", "FINAL"];
-            let esperando_nueva_direccion = false;
-            let preguntaFinalMostrada = false;
-        
-            function agregarMensaje(texto, clase) {
-                const div = document.createElement("div");
-                div.className = clase;
-                div.textContent = texto;
-                chat.appendChild(div);
-                chat.scrollTop = chat.scrollHeight;
+        function mostrarGuiaChat() {
+            document.getElementById('guiaModal').style.display = 'block';
+            if (!guiaChat) {
+                guiaChat = new GuiaChatIA();
             }
+        }
         
-            function reproducirSonido() {
-                const audio = new Audio('https://cdn.pixabay.com/audio/2022/07/26/audio_124bfa4c82.mp3');
-                audio.play();
+        function cerrarGuiaChat() {
+            document.getElementById('guiaModal').style.display = 'none';
+        }
+        
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('guiaModal');
+            if (event.target === modal) {
+                cerrarGuiaChat();
             }
+        }
         
-            function hablar(texto) {
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                    const utter = new SpeechSynthesisUtterance(texto);
-                    utter.lang = 'es-ES';
-                    window.speechSynthesis.speak(utter);
-                }
+        class GuiaChatIA {
+            constructor() {
+                this.chatContainer = document.getElementById('chatGuia');
+                this.form = document.getElementById('guiaForm');
+                this.input = document.getElementById('guiaInput');
+                this.responses = this.getKnowledgeBase();
+                
+                this.init();
             }
-        
-            function validarCedula(cedula) {
-                return /^\d{9,10}$/.test(cedula);
+            
+            init() {
+                this.form.addEventListener('submit', (e) => this.handleGuiaSubmit(e));
             }
-        
-            function validarTelefono(telefono) {
-                return /^[2678]\d{7}$/.test(telefono);
-            }
-        
-            function responder(data) {
-                if (typeof data === "string" && validacionCompletada && !flujoFinalizado) {
-                    const texto = data.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    if (["si", "sí", "no"].includes(texto)) {
-                        if (texto === "si") {
-                            const numero = Math.floor(100000 + Math.random() * 900000);
-                            flujoFinalizado = true;
-                            return {
-                                orden_creada: true,
-                                mensaje: `¡Felicidades! Clasificaste para una tarjeta. Tu número de solicitud es: ${numero}.`,
-                                numeroSolicitud: numero
-                            };
-                        } else {
-                            esperando_nueva_direccion = true;
-                            return {
-                                pide_nueva_direccion: true,
-                                mensaje: "Por favor, indícanos tu nueva dirección de entrega."
-                            };
-                        }
-                    } else {
-                        return { mensaje: "Por favor responde únicamente con 'sí' o 'no'." };
-                    }
-                }
-        
-                if (flujoFinalizado) {
-                    return {
-                        mensaje: "Gracias, ya finalizamos tu solicitud. Por favor, hacé clic en 'Iniciar otra solicitud' si querés reiniciar."
-                    };
-                }
-        
-                if (paso === 1) {
-                    if (!data.nombre) return { paso: 1, pregunta: "¿Cuál es tu nombre completo?" };
-                    return { paso: 2, pregunta: "¿Cuál es tu cédula?" };
-                }
-        
-                if (paso === 2) {
-                    if (!data.cedula) return { paso: 2, pregunta: "¿Cuál es tu cédula?" };
-                    if (!validarCedula(data.cedula)) return { paso: 2, pregunta: "La cédula no es válida. Intenta de nuevo." };
-                    return { paso: 3, pregunta: "¿Cuál es tu teléfono?" };
-                }
-        
-                if (paso === 3) {
-                    if (!data.telefono) return { paso: 3, pregunta: "¿Cuál es tu teléfono?" };
-                    if (!validarTelefono(data.telefono)) return { paso: 3, pregunta: "El número de teléfono no es válido. Debe tener 8 dígitos y empezar con 2, 6, 7 u 8." };
-                    return { paso: 4, pregunta: "¿Cuál es la dirección de entrega de la tarjeta?" };
-                }
-        
-                if (paso === 4) {
-                    if (!data.direccion) return { paso: 4, pregunta: "¿Cuál es la dirección de entrega de la tarjeta?" };
-                    if (!validando && !validacionCompletada) {
-                        validando = true;
-                        indexValidacion = 0;
-                        return { validando: true, mensaje: "Iniciando validaciones...", siguiente: secuencia[0] };
-                    }
-                    return {};
-                }
-        
-                if (data.nueva_direccion) {
-                    const numero = Math.floor(100000 + Math.random() * 900000);
-                    datos.direccion = data.nueva_direccion;
-                    flujoFinalizado = true;
-                    return {
-                        orden_creada: true,
-                        mensaje: `¡Gracias! Enviaremos tu tarjeta a: "${data.nueva_direccion}". Tu número de solicitud es: ${numero}.`,
-                        numeroSolicitud: numero
-                    };
-                }
-        
-                return { mensaje: "Algo salió mal..." };
-            }
-        
-            function procesarRespuesta(r) {
-                if (r.pregunta) agregarMensaje("Banco: " + r.pregunta, "bot");
-                if (r.pregunta_final && !preguntaFinalMostrada) {
-                    agregarMensaje("Banco: " + r.mensaje, "bot");
-                    preguntaFinalMostrada = true;
-                }
-        
-                if (r.pide_nueva_direccion) {
-                    esperando_nueva_direccion = true;
-                    agregarMensaje("Banco: " + r.mensaje, "bot");
-                } else if (r.mensaje && !r.orden_creada) {
-                    agregarMensaje("Banco: " + r.mensaje, "bot");
-                }
-        
-                if (r.orden_creada) {
-                    agregarMensaje("Banco: " + r.mensaje, "bot");
-                    reproducirSonido();
-                    setTimeout(() => hablar(r.mensaje), 800);
-                    form.style.display = "none";
-                    crearBotonReiniciar();
-                }
-            }
-        
-            async function iniciarValidaciones() {
-                const mensajes = {
-                    "CCSS": "Validando en CCSS...",
-                    "BCR": "Validando en Banco de Costa Rica...",
-                    "HACIENDA": "Validando en Ministerio de Hacienda...",
-                    "FINAL": `¿La dirección de entrega es la misma que escribiste: "${datos.direccion}"? (Responde sí o no)`
-                };
-        
-                while (validando && indexValidacion < secuencia.length) {
-                    const etapa = secuencia[indexValidacion];
-        
-                    if (etapa === "FINAL") {
-                        validando = false;
-                        validacionCompletada = true;
-        
-                        if (!preguntaFinalMostrada) {
-                            preguntaFinalMostrada = true;
-                            procesarRespuesta({
-                                pregunta_final: true,
-                                mensaje: mensajes["FINAL"]
-                            });
-                        }
-                        break;
-                    }
-        
-                    agregarMensaje("Banco: " + mensajes[etapa], "bot");
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    indexValidacion++;
-                }
-            }
-        
-            function crearBotonReiniciar() {
-                const boton = document.createElement("button");
-                boton.textContent = "Iniciar otra solicitud";
-                boton.className = "reiniciar-boton";
-                boton.style.marginTop = "15px";
-                boton.onclick = () => {
-                    chat.innerHTML = "";
-                    form.style.display = "block";
-                    input.value = "";
-                    paso = 1;
-                    datos = {};
-                    validando = false;
-                    validacionCompletada = false;
-                    flujoFinalizado = false;
-                    esperando_nueva_direccion = false;
-                    preguntaFinalMostrada = false;
-                    indexValidacion = 0;
-                    agregarMensaje("Banco: ¡Bienvenido! Vamos a solicitar tu tarjeta de crédito. ¿Cuál es tu nombre completo?", "bot");
-                    boton.remove();
-                };
-                chat.appendChild(boton);
-                chat.scrollTop = chat.scrollHeight;
-            }
-        
-            form.addEventListener("submit", function (e) {
+            
+            async handleGuiaSubmit(e) {
                 e.preventDefault();
-                const valor = input.value.trim();
-                if (!valor) return;
-        
-                agregarMensaje("Tú: " + valor, "user");
-                input.value = "";
-        
-                if (flujoFinalizado) {
-                    agregarMensaje("Banco: Ya finalizamos tu solicitud. Por favor, hacé clic en 'Iniciar otra solicitud' si querés reiniciar.", "bot");
-                    return;
+                const message = this.input.value.trim();
+                if (!message) return;
+                
+                this.addGuiaMessage(message, 'user');
+                this.input.value = '';
+                
+                // Mostrar indicador de escritura
+                this.addGuiaMessage('El asistente está escribiendo...', 'bot typing');
+                
+                try {
+                    const response = await fetch('/chat-guia', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: message })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Remover indicador de escritura
+                    const typingMessages = this.chatContainer.querySelectorAll('.typing');
+                    typingMessages.forEach(msg => msg.remove());
+                    
+                    this.addGuiaMessage(data.response, 'bot');
+                } catch (error) {
+                    // Remover indicador de escritura
+                    const typingMessages = this.chatContainer.querySelectorAll('.typing');
+                    typingMessages.forEach(msg => msg.remove());
+                    
+                    this.addGuiaMessage('Lo siento, hubo un error. Por favor intenta de nuevo.', 'bot');
                 }
-        
-                // ✅ CORREGIDO: no salir de nueva_direccion si es inválida
-                if (esperando_nueva_direccion) {
-                    const nuevaDireccion = valor.trim();
-                    if (nuevaDireccion.length < 5) {
-                        procesarRespuesta({
-                            mensaje: "La dirección es muy corta. Por favor, escribe una dirección válida."
+            }
+            
+            addGuiaMessage(text, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}`;
+                messageDiv.innerHTML = `<p>${text}</p>`;
+                this.chatContainer.appendChild(messageDiv);
+                this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+            }
+            
+            getKnowledgeBase() {
+                return {
+                    'formulario': 'Para llenar el formulario correctamente: 1) Ingresa tu nombre completo (1-2 nombres + 2 apellidos), 2) Tu cédula de 9-10 dígitos, 3) Teléfono de 8 dígitos empezando con 2,6,7 u 8, 4) Dirección completa para entrega.',
+                    'requisitos': 'Requisitos para tarjeta BCR: Mayor de edad, cédula vigente, ingresos demostrables mínimos ₡300,000, no estar en centrales de riesgo, residir en Costa Rica.',
+                    'documentos': 'Documentos necesarios: Cédula de identidad vigente, comprobante de ingresos (colillas, constancia patronal), comprobante de domicilio (recibo de servicios).',
+                    'validacion': 'El proceso de validación incluye: verificación en CCSS, consulta en centrales de riesgo, validación en sistema BCR, y confirmación en Ministerio de Hacienda.',
+                    'tiempo': 'El proceso toma aproximadamente 2-3 minutos. La tarjeta se entrega en 24-48 horas hábiles una vez aprobada.',
+                    'credito': 'El límite de crédito inicial es de ₡500,000 a ₡2,000,000 dependiendo de tus ingresos y historial crediticio.',
+                    'ayuda': 'Si necesitas ayuda adicional, puedes contactar al 2295-9595 o visitar cualquier sucursal BCR.'
+                };
+            }
+            
+            getAIResponse(message) {
+                const lowerMessage = message.toLowerCase();
+                
+                // Buscar palabras clave en el mensaje
+                for (const [key, response] of Object.entries(this.responses)) {
+                    if (lowerMessage.includes(key) || 
+                        (key === 'formulario' && (lowerMessage.includes('llenar') || lowerMessage.includes('completar'))) ||
+                        (key === 'requisitos' && lowerMessage.includes('requisito')) ||
+                        (key === 'documentos' && lowerMessage.includes('documento')) ||
+                        (key === 'validacion' && (lowerMessage.includes('valida') || lowerMessage.includes('proceso'))) ||
+                        (key === 'tiempo' && (lowerMessage.includes('tiempo') || lowerMessage.includes('demora') || lowerMessage.includes('cuanto'))) ||
+                        (key === 'credito' && (lowerMessage.includes('limite') || lowerMessage.includes('monto'))) ||
+                        (key === 'ayuda' && (lowerMessage.includes('contacto') || lowerMessage.includes('telefono')))) {
+                        return response;
+                    }
+                }
+                
+                // Respuestas inteligentes basadas en contexto
+                if (lowerMessage.includes('hola') || lowerMessage.includes('buenos')) {
+                    return '¡Hola! Soy tu asistente virtual del BCR. ¿En qué puedo ayudarte con tu solicitud de tarjeta de crédito?';
+                }
+                
+                if (lowerMessage.includes('gracias')) {
+                    return '¡De nada! Estoy aquí para ayudarte. ¿Tienes alguna otra pregunta sobre el proceso?';
+                }
+                
+                if (lowerMessage.includes('problema') || lowerMessage.includes('error')) {
+                    return 'Si tienes problemas técnicos, intenta refrescar la página. Si el problema persiste, contacta al 2295-9595.';
+                }
+                
+                // Respuesta por defecto con sugerencias
+                return 'No estoy seguro de cómo ayudarte con eso específicamente. ¿Podrías preguntarme sobre: formulario, requisitos, documentos, validación, tiempo de proceso, o límites de crédito?';
+            }
+        }
+
+        // Funciones adicionales para compatibilidad
+        function ejecutarPruebas() {
+            // Mostrar modal de progreso
+            mostrarModalPruebas();
+            
+            fetch('/test-automated')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('resultados-pruebas').innerHTML = `
+                        <div class="test-results">
+                            <h4>✅ Resultados de Pruebas Automáticas:</h4>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <span class="stat-number">${data.total_tests}</span>
+                                    <span class="stat-label">Total</span>
+                                </div>
+                                <div class="stat-card success">
+                                    <span class="stat-number">${data.passed}</span>
+                                    <span class="stat-label">Exitosas</span>
+                                </div>
+                                <div class="stat-card error">
+                                    <span class="stat-number">${data.failed}</span>
+                                    <span class="stat-label">Fallidas</span>
+                                </div>
+                            </div>
+                            <button onclick="openTestWindow()" class="result-button">
+                                📊 Ver Detalles Completos
+                            </button>
+                            <button onclick="ejecutarPruebasExhaustivas()" class="result-button" style="background: linear-gradient(135deg, #ff9800, #ffb74d);">
+                                🔬 Pruebas Exhaustivas con IA
+                            </button>
+                        </div>
+                    `;
+                    ocultarModalPruebas();
+                })
+                .catch(error => {
+                    console.error('Error ejecutando pruebas:', error);
+                    ocultarModalPruebas();
+                });
+        }
+
+        async function ejecutarPruebasExhaustivas() {
+            mostrarModalPruebas();
+            
+            try {
+                const response = await fetch('/test-exhaustive', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('resultados-pruebas').innerHTML = `
+                    <div class="exhaustive-results">
+                        <h4>🔬 Análisis Exhaustivo con IA</h4>
+                        <div class="analysis-summary">
+                            <div class="metric">
+                                <span class="metric-label">Escenarios Probados:</span>
+                                <span class="metric-value">${data.total_scenarios}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Vulnerabilidades:</span>
+                                <span class="metric-value ${data.vulnerabilities > 0 ? 'error' : 'success'}">${data.vulnerabilities}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Score de Seguridad:</span>
+                                <span class="metric-value ${data.security_score < 80 ? 'warning' : 'success'}">${data.security_score}%</span>
+                            </div>
+                        </div>
+                        <div class="recommendations-ai">
+                            <h5>🤖 Recomendaciones de la IA:</h5>
+                            <ul>
+                                ${data.ai_recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="error-scenarios">
+                            <h5>⚠️ Escenarios de Error Detectados:</h5>
+                            <ul>
+                                ${data.error_scenarios.map(scenario => `<li><strong>${scenario.type}:</strong> ${scenario.description}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error en pruebas exhaustivas:', error);
+                document.getElementById('resultados-pruebas').innerHTML = `
+                    <div class="error-message">
+                        <h4>❌ Error en Pruebas Exhaustivas</h4>
+                        <p>No se pudieron ejecutar las pruebas exhaustivas. Verifica la conexión.</p>
+                    </div>
+                `;
+            }
+            
+            ocultarModalPruebas();
+        }
+
+        function mostrarModalPruebas() {
+            const modal = document.createElement('div');
+            modal.id = 'modalPruebas';
+            modal.innerHTML = `
+                <div class="modal" style="display: block;">
+                    <div class="modal-content" style="text-align: center; max-width: 400px;">
+                        <div class="loading-animation">
+                            <div class="spinner"></div>
+                            <h3>🔬 Ejecutando Pruebas...</h3>
+                            <p>La IA está analizando todos los escenarios posibles</p>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="progressFill"></div>
+                            </div>
+                            <p id="statusText">Iniciando análisis...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Simular progreso
+            let progress = 0;
+            const statusTexts = [
+                "Validando campos de entrada...",
+                "Probando inyección SQL...",
+                "Verificando XSS...",
+                "Analizando validaciones...",
+                "Probando casos límite...",
+                "Generando reporte final..."
+            ];
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 20;
+                if (progress > 100) progress = 100;
+                
+                document.getElementById('progressFill').style.width = progress + '%';
+                
+                const statusIndex = Math.floor((progress / 100) * statusTexts.length);
+                if (statusIndex < statusTexts.length) {
+                    document.getElementById('statusText').textContent = statusTexts[statusIndex];
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 500);
+        }
+
+        function ocultarModalPruebas() {
+            const modal = document.getElementById('modalPruebas');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function verRecomendaciones() {
+            fetch('/recommendations')
+                .then(response => response.json())
+                .then(data => {
+                    let html = '<div class="recommendations"><h4>💡 Recomendaciones del Sistema:</h4>';
+                    data.recommendations.forEach(category => {
+                        html += `<div class="rec-category">
+                            <h5>${category.category}:</h5>
+                            <ul>`;
+                        category.items.forEach(item => {
+                            html += `<li>✓ ${item}</li>`;
                         });
-                    } else {
-                        esperando_nueva_direccion = false;
-                        const r = responder({ nueva_direccion: nuevaDireccion });
-                        procesarRespuesta(r);
-                    }
-                    return;
-                }
+                        html += '</ul></div>';
+                    });
+                    html += '</div>';
+                    document.getElementById('resultados-pruebas').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error obteniendo recomendaciones:', error);
+                });
+        }
         
-                let r = {};
+        function openTestWindow() {
+            window.open('/pruebas-automaticas', '_blank', 'width=500,height=700');
+        }
         
-                if (validacionCompletada && !esperando_nueva_direccion) {
-                    r = responder(valor);
-                } else if (paso <= 4) {
-                    switch (paso) {
-                        case 1: datos.nombre = valor; break;
-                        case 2: datos.cedula = valor; break;
-                        case 3: datos.telefono = valor; break;
-                        case 4: datos.direccion = valor; break;
-                    }
-                    r = responder(datos);
-                    paso = r.paso || paso;
-                } else {
-                    r = responder(valor);
-                }
-        
-                if (r.validando) {
-                    iniciarValidaciones();
-                } else {
-                    procesarRespuesta(r);
-                }
-            });
-        
-            agregarMensaje("Banco: ¡Bienvenido! Vamos a solicitar tu tarjeta de crédito. ¿Cuál es tu nombre completo?", "bot");
-        });
-        </script>
-        
-    
+        function openReportWindow() {
+            window.open('/reporte-pruebas', '_blank', 'width=500,height=700');
+        }
+    </script>
 </body>
 </html>
