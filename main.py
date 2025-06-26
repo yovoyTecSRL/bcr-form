@@ -636,7 +636,17 @@ async def run_exhaustive_tests(request: Request):
     }
 
 # Sistema de recomendaciones avanzadas con IA
-OPENAI_API_KEY = "sk-fake-key-for-demo"  # Reemplazar por clave real si se necesita
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-fake-key-for-demo")  # Usar variable de entorno
+
+# Intentar importar OpenAI si está disponible
+try:
+    import openai
+    openai.api_key = OPENAI_API_KEY
+    OPENAI_AVAILABLE = OPENAI_API_KEY.startswith("sk-") and len(OPENAI_API_KEY) > 20
+    print(f"📡 OpenAI configurado: {'✅ Disponible' if OPENAI_AVAILABLE else '❌ Clave no válida'}")
+except ImportError:
+    OPENAI_AVAILABLE = False
+    print("📡 OpenAI no instalado, usando IA simulada")
 
 class SecurityAnalyzer:
     """Analizador de seguridad con IA simulada"""
