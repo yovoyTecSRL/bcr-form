@@ -1,0 +1,222 @@
+
+        body {
+            background: linear-gradient(135deg, #0a1d43 60%, #0b192b 100%);
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            min-width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .banco-header {
+            background: linear-gradient(90deg, #002b7f 0%, #ffffff 50%, #ce1126 100%);
+            color: #002b7f;
+            padding: 18px 0 12px 0;
+            text-align: center;
+            border-bottom-left-radius: 32px;
+            border-bottom-right-radius: 32px;
+            box-shadow: 0 4px 16px #002b7f22;
+            width: 100vw;
+            max-width: 430px;
+        }
+        .banco-header img.logo {
+            width: 54px;
+            margin-bottom: 8px;
+            vertical-align: middle;
+        }
+        .banco-header img.bandera {
+            width: 34px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .banco-header h1 {
+            margin: 0;
+            font-size: 1.5em;
+            letter-spacing: 2px;
+            color: #002b7f;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .banco-header .sub {
+            font-size: 1.1em;
+            opacity: 0.85;
+            margin-top: 4px;
+    color: #ffebee;
+    text-shadow: 1px 2px 3px black;
+    font-weight: 100;
+    letter-spacing: 0.8px;
+        }
+        .container {
+            max-width: 430px;
+            width: 100vw;
+            min-height: 70vh;
+            max-height: 85vh;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px #002b7f22;
+            padding: 18px 8px 12px 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        .tarjeta-demo {
+            background: linear-gradient(135deg, #002b7f 60%, #ce1126 100%);
+            color: #fff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 12px #002b7f33;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tarjeta-demo .chip {
+            width: 28px;
+            height: 18px;
+            background: #ffd600;
+            border-radius: 5px;
+            margin-right: 8px;
+        }
+        .tarjeta-demo .info {
+            flex: 1;
+        }
+        .tarjeta-demo .info span {
+            display: block;
+            font-size: 0.93em;
+            opacity: 0.8;
+        }
+        .tarjeta-demo .info strong {
+            font-size: 1.08em;
+            letter-spacing: 1px;
+        }
+        .chat {
+            border: 1px solid #b0b8d1;
+            border-radius: 10px;
+            padding: 10px;
+            min-height: 140px;
+            background: #f9fafc;
+            margin-bottom: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 1em;
+        }
+        .user {
+            color: #ce1126;
+            margin-bottom: 8px;
+            text-align: right;
+            font-weight: 500;
+        }
+        .bot {
+            color: #002b7f;
+            margin-bottom: 8px;
+            text-align: left;
+            font-weight: 500;
+        }
+        form {
+            display: flex;
+            gap: 8px;
+        }
+        input, button {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #b0b8d1;
+            font-size: 1em;
+        }
+        input {
+            flex: 1;
+            outline: none;
+        }
+        button:hover,
+        .button:hover {
+             background: linear-gradient(135deg, #ce0d03 60%, #2b140b 100%);
+        }
+        .footer {
+            text-align: center;
+            color: #888;
+            font-size: 0.95em;
+            margin-top: 18px;
+        }
+        .estado-tarjeta {
+            margin: 18px auto 0 auto;
+            max-width: 350px;
+            background: #e3eafc;
+            border: 1px solid #b0b8d1;
+            border-radius: 10px;
+            padding: 16px 12px;
+            color: #002b7f;
+            font-size: 1.08em;
+            text-align: center;
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .container { margin: 0; padding: 4px; min-height: 80vh; }
+            .banco-header { padding: 10px 0 4px 0; border-radius: 0 0 18px 18px; }
+            .banco-header h1 { font-size: 1.1em; }
+            .tarjeta-demo { padding: 6px 6px; }
+            .chat { padding: 6px; min-height: 90px; max-height: 120px; font-size: 0.98em;}
+            input, button { padding: 8px; font-size: 0.98em; }
+        }
+
+        .header { background: #002b7f; color: #fff; padding: 18px 0; text-align: center; font-size: 1.2em; }
+        .chat { max-width: 400px; margin: 24px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px #002b7f22; padding: 18px; min-height: 320px; }
+        .user { color: #ce1126; text-align: right; margin-bottom: 8px; font-weight: 500; }
+        .bot { color: #002b7f; text-align: left; margin-bottom: 8px; font-weight: 500; }
+        .resumen { text-align: center; margin-top: 24px; }
+.button{
+    background: linear-gradient(135deg, #1a49a7 60%, #0b192b 100%);
+    color: #fff;
+    padding: 12px 28px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    mix-blend-mode: hard-light;
+    font-weight: 100;
+    box-shadow: 0 0 10px -3px black;
+    text-align: center;
+}
+
+
+
+    .bandera {
+    mix-blend-mode: overlay;
+    box-sizing: border-box;
+    filter: blur(2px);
+      width: 100%;
+      max-width: 600px;
+      aspect-ratio: 3 / 2;
+      border: 2px solid #000;
+      display: flex;
+      flex-direction: column;
+      height: 30px; /* Altura fija para la bandera */
+    }
+
+    .franja {
+      flex: 1;
+    }
+
+    .azul {
+      background-color: #002b7f;
+    }
+
+    .blanco {
+      background-color: #ffffff;
+    }
+
+    .rojo {
+      background-color: #ce1126;
+      flex: 2; /* La franja roja es doble de alto */
+    }
+    .nav{
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 16px;
+        flex-direction: row;
+    max-width: 430px;
+    margin: 20px auto;
+
+    }
