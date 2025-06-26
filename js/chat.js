@@ -932,11 +932,26 @@ class BCRChat {
             document.body.appendChild(resultadosDiv);
         }
         
-        const scoreColor = data.summary.security_score >= 90 ? '#4caf50' : 
-                           data.summary.security_score >= 75 ? '#ff9800' : '#f44336';
+        // Verificar que data y sus propiedades existan con valores por defecto
+        const summary = data.summary || {};
+        const aiAnalysis = data.ai_analysis || {};
+        const recommendations = data.recommendations || [];
+        const detailedResults = data.detailed_results || [];
+        const executionTime = data.execution_time || 'N/A';
         
-        const securityLevel = data.ai_analysis.security_level;
+        const securityScore = summary.security_score || 0;
+        const scoreColor = securityScore >= 90 ? '#4caf50' : 
+                           securityScore >= 75 ? '#ff9800' : '#f44336';
+        
+        const securityLevel = aiAnalysis.security_level || 'DESCONOCIDO';
         const levelEmoji = securityLevel === 'ALTO' ? '🛡️' : securityLevel === 'MEDIO' ? '⚠️' : '🚨';
+        const confidence = aiAnalysis.confidence || 0;
+        const riskAssessment = aiAnalysis.risk_assessment || 'Evaluación no disponible';
+        
+        const totalTests = summary.total_tests || 0;
+        const passed = summary.passed || 0;
+        const warnings = summary.warnings || 0;
+        const failed = summary.failed || 0;
         
         resultadosDiv.innerHTML = `
             <div class="ai-test-results" style="background: linear-gradient(135deg, #f3e5f5, #e1bee7); border-radius: 16px; padding: 25px; box-shadow: 0 8px 32px rgba(156, 39, 176, 0.2);">
@@ -949,12 +964,12 @@ class BCRChat {
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 200px;">
                             <h3 style="margin: 0; color: ${scoreColor}; font-size: 1.3em;">${levelEmoji} Nivel de Seguridad: ${securityLevel}</h3>
-                            <p style="margin: 8px 0; color: #666; font-size: 0.95em;">Confianza IA: ${data.ai_analysis.confidence}%</p>
-                            <p style="margin: 5px 0; color: #666; font-size: 0.9em;">${data.ai_analysis.risk_assessment}</p>
+                            <p style="margin: 8px 0; color: #666; font-size: 0.95em;">Confianza IA: ${confidence}%</p>
+                            <p style="margin: 5px 0; color: #666; font-size: 0.9em;">${riskAssessment}</p>
                         </div>
                         <div style="flex: 0 0 auto; margin-left: 20px;">
                             <div style="font-size: 3em; font-weight: bold; color: ${scoreColor}; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
-                                ${data.summary.security_score}%
+                                ${securityScore}%
                             </div>
                             <div style="font-size: 0.9em; color: #666; text-align: center;">Score de Seguridad</div>
                         </div>
@@ -963,51 +978,57 @@ class BCRChat {
                 
                 <div class="ai-metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px;">
                     <div class="metric-card" style="background: #e8f5e8; padding: 15px; border-radius: 12px; text-align: center; border: 2px solid #4caf50;">
-                        <div style="font-size: 2em; color: #4caf50; font-weight: bold;">${data.summary.passed}</div>
-                        <div style="font-size: 0.9em; color: #2e7d32; font-weight: 500;">Escenarios Probados</div>
+                        <div style="font-size: 2em; color: #4caf50; font-weight: bold;">${passed}</div>
+                        <div style="font-size: 0.9em; color: #2e7d32; font-weight: 500;">Tests Pasados</div>
                     </div>
                     <div class="metric-card" style="background: #fff3e0; padding: 15px; border-radius: 12px; text-align: center; border: 2px solid #ff9800;">
-                        <div style="font-size: 2em; color: #ff9800; font-weight: bold;">${data.summary.warnings}</div>
-                        <div style="font-size: 0.9em; color: #ef6c00; font-weight: 500;">Vulnerabilidades</div>
+                        <div style="font-size: 2em; color: #ff9800; font-weight: bold;">${warnings}</div>
+                        <div style="font-size: 0.9em; color: #ef6c00; font-weight: 500;">Advertencias</div>
                     </div>
                     <div class="metric-card" style="background: #ffebee; padding: 15px; border-radius: 12px; text-align: center; border: 2px solid #f44336;">
-                        <div style="font-size: 2em; color: #f44336; font-weight: bold;">${data.summary.failed}</div>
-                        <div style="font-size: 0.9em; color: #c62828; font-weight: 500;">Score de Seguridad</div>
+                        <div style="font-size: 2em; color: #f44336; font-weight: bold;">${failed}</div>
+                        <div style="font-size: 0.9em; color: #c62828; font-weight: 500;">Tests Fallidos</div>
                     </div>
                     <div class="metric-card" style="background: #f3e5f5; padding: 15px; border-radius: 12px; text-align: center; border: 2px solid #9c27b0;">
-                        <div style="font-size: 1.5em; color: #9c27b0; font-weight: bold;">${data.summary.security_score}%</div>
-                        <div style="font-size: 0.9em; color: #7b1fa2; font-weight: 500;">Tiempo: ${data.execution_time}</div>
+                        <div style="font-size: 1.5em; color: #9c27b0; font-weight: bold;">${totalTests}</div>
+                        <div style="font-size: 0.9em; color: #7b1fa2; font-weight: 500;">Total Tests</div>
                     </div>
                 </div>
                 
                 <div class="ai-recommendations" style="background: rgba(123, 31, 162, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; border-left: 5px solid #9c27b0;">
                     <h4 style="margin: 0 0 15px 0; color: #7b1fa2; font-size: 1.2em;">🤖 Recomendaciones de la IA</h4>
                     <div class="recommendations-list" style="max-height: 200px; overflow-y: auto;">
-                        ${data.recommendations.slice(0, 8).map((rec, index) => `
+                        ${recommendations.length > 0 ? recommendations.slice(0, 8).map((rec, index) => `
                             <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.5); border-radius: 6px; font-size: 0.95em;">
                                 <span style="color: #7b1fa2; font-weight: 500;">${index + 1}.</span> ${rec}
                             </div>
-                        `).join('')}
+                        `).join('') : '<p style="color: #666; font-style: italic;">No hay recomendaciones disponibles</p>'}
                     </div>
                 </div>
                 
                 <div class="ai-scenarios" style="background: rgba(76, 175, 80, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
                     <h4 style="margin: 0 0 15px 0; color: #2e7d32; font-size: 1.2em;">⚠️ Escenarios de Error Detectados</h4>
                     <div class="scenarios-list">
-                        ${data.detailed_results.filter(test => test.vulnerability !== 'NONE').slice(0, 3).map(test => `
-                            <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 8px; border-left: 4px solid #ff9800;">
-                                <strong style="color: #ef6c00;">${test.vulnerability.charAt(0).toUpperCase() + test.vulnerability.slice(1)}:</strong> 
-                                <span style="color: #424242;">${test.name}</span>
-                            </div>
-                        `).join('') || '<p style="color: #4caf50; font-style: italic;">🎉 No se detectaron escenarios de error críticos</p>'}
+                        ${detailedResults.length > 0 ? 
+                            detailedResults.filter(test => test.vulnerability && test.vulnerability !== 'NONE').slice(0, 3).map(test => `
+                                <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 8px; border-left: 4px solid #ff9800;">
+                                    <strong style="color: #ef6c00;">${(test.vulnerability || 'UNKNOWN').charAt(0).toUpperCase() + (test.vulnerability || 'unknown').slice(1)}:</strong> 
+                                    <span style="color: #424242;">${test.name || 'Test sin nombre'}</span>
+                                </div>
+                            `).join('') || '<p style="color: #4caf50; font-style: italic;">🎉 No se detectaron escenarios de error críticos</p>'
+                        : '<p style="color: #4caf50; font-style: italic;">🎉 No se detectaron escenarios de error críticos</p>'}
                     </div>
                 </div>
                 
+                <div class="ai-time-info" style="background: rgba(156, 39, 176, 0.05); border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;">
+                    <p style="color: #7b1fa2; margin: 0; font-size: 0.9em;">⏱️ Tiempo de análisis: <strong>${executionTime}</strong></p>
+                </div>
+                
                 <div class="ai-actions" style="text-align: center; margin-top: 25px;">
-                    <button onclick="verDetallesCompletosIA()" style="background: linear-gradient(135deg, #9c27b0, #ba68c8); color: white; padding: 12px 25px; border: none; border-radius: 25px; margin: 5px; cursor: pointer; font-weight: 500; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);">
+                    <button onclick="bcr_chat.verDetallesCompletosIA()" style="background: linear-gradient(135deg, #9c27b0, #ba68c8); color: white; padding: 12px 25px; border: none; border-radius: 25px; margin: 5px; cursor: pointer; font-weight: 500; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);">
                         📊 Ver Análisis Completo
                     </button>
-                    <button onclick="exportarReporteIA()" style="background: linear-gradient(135deg, #1565c0, #42a5f5); color: white; padding: 12px 25px; border: none; border-radius: 25px; margin: 5px; cursor: pointer; font-weight: 500; box-shadow: 0 4px 15px rgba(21, 101, 192, 0.3);">
+                    <button onclick="bcr_chat.exportarReporteIA()" style="background: linear-gradient(135deg, #1565c0, #42a5f5); color: white; padding: 12px 25px; border: none; border-radius: 25px; margin: 5px; cursor: pointer; font-weight: 500; box-shadow: 0 4px 15px rgba(21, 101, 192, 0.3);">
                         📄 Exportar Reporte
                     </button>
                     <button onclick="window.open('/reporte-pruebas', '_blank')" style="background: linear-gradient(135deg, #ce1126, #ef5350); color: white; padding: 12px 25px; border: none; border-radius: 25px; margin: 5px; cursor: pointer; font-weight: 500; box-shadow: 0 4px 15px rgba(206, 17, 38, 0.3);">
@@ -1033,38 +1054,73 @@ class BCRChat {
 
     verDetallesCompletosIA() {
         const data = JSON.parse(localStorage.getItem('pruebasExhaustivasIA') || '{}');
-        if (data.detailed_results) {
+        if (data.detailed_results && data.detailed_results.length > 0) {
             const detalles = data.detailed_results.map(test => 
-                `${test.name}: ${test.status} (${test.vulnerability} risk)\n${test.details}`
+                `${test.name || 'Test sin nombre'}: ${test.status || 'UNKNOWN'} (${test.vulnerability || 'NONE'} risk)\n${test.details || 'Sin detalles'}`
             ).join('\n\n');
             
-            alert(`Análisis Completo de IA:\n\n${detalles}`);
+            const aiInfo = data.ai_analysis ? `
+Análisis de IA:
+- Nivel de Seguridad: ${data.ai_analysis.security_level || 'N/A'}
+- Confianza: ${data.ai_analysis.confidence || 'N/A'}%
+- Score de Performance: ${data.ai_analysis.performance_score || 'N/A'}%
+- Score de UX: ${data.ai_analysis.ux_score || 'N/A'}%
+
+` : '';
+            
+            alert(`Análisis Completo de IA:\n\n${aiInfo}Tests Detallados:\n\n${detalles}`);
+        } else {
+            alert('No hay detalles de análisis disponibles. Ejecuta las pruebas exhaustivas primero.');
         }
     }
 
     exportarReporteIA() {
         const data = JSON.parse(localStorage.getItem('pruebasExhaustivasIA') || '{}');
+        
+        if (!data.summary) {
+            alert('No hay datos de análisis para exportar. Ejecuta las pruebas exhaustivas primero.');
+            return;
+        }
+        
+        const summary = data.summary || {};
+        const aiAnalysis = data.ai_analysis || {};
+        const recommendations = data.recommendations || [];
+        
         const reporte = `
 REPORTE DE ANÁLISIS EXHAUSTIVO CON IA - BCR SECURITY
 Fecha: ${new Date().toLocaleString('es-CR')}
 Sistema: BCR Form Security Analysis AI v2.0
 
 RESUMEN EJECUTIVO:
-- Score de Seguridad: ${data.summary?.security_score || 'N/A'}%
-- Nivel de Riesgo: ${data.ai_analysis?.security_level || 'N/A'}
-- Confianza IA: ${data.ai_analysis?.confidence || 'N/A'}%
+- Score de Seguridad: ${summary.security_score || 'N/A'}%
+- Nivel de Riesgo: ${aiAnalysis.security_level || 'N/A'}
+- Confianza IA: ${aiAnalysis.confidence || 'N/A'}%
 - Tiempo de Análisis: ${data.execution_time || 'N/A'}
 
 MÉTRICAS:
-- Escenarios Probados: ${data.summary?.total_tests || 'N/A'}
-- Vulnerabilidades: ${data.summary?.warnings || 'N/A'}
-- Tests Pasados: ${data.summary?.passed || 'N/A'}
+- Total de Tests: ${summary.total_tests || 'N/A'}
+- Tests Pasados: ${summary.passed || 'N/A'}
+- Advertencias: ${summary.warnings || 'N/A'}
+- Tests Fallidos: ${summary.failed || 'N/A'}
+
+SCORES ADICIONALES:
+- Performance Score: ${aiAnalysis.performance_score || 'N/A'}%
+- UX Score: ${aiAnalysis.ux_score || 'N/A'}%
+- Backend Score: ${aiAnalysis.backend_score || 'N/A'}%
 
 RECOMENDACIONES PRINCIPALES:
-${data.recommendations?.slice(0, 10).map((rec, i) => `${i+1}. ${rec}`).join('\n') || 'No disponibles'}
+${recommendations.length > 0 ? recommendations.slice(0, 10).map((rec, i) => `${i+1}. ${rec}`).join('\n') : 'No hay recomendaciones disponibles'}
 
 ANÁLISIS DE RIESGO:
-${data.ai_analysis?.risk_assessment || 'No disponible'}
+${aiAnalysis.risk_assessment || 'No disponible'}
+
+PRÓXIMOS PASOS:
+${aiAnalysis.next_steps ? aiAnalysis.next_steps.map((step, i) => `${i+1}. ${step}`).join('\n') : 'No disponibles'}
+
+TESTS DETALLADOS:
+${data.detailed_results ? data.detailed_results.map(test => 
+    `• ${test.name || 'Test sin nombre'}: ${test.status || 'UNKNOWN'} (${test.vulnerability || 'NONE'} vulnerability)\n  ${test.details || 'Sin detalles'}`
+).join('\n') : 'No disponibles'}
         `.trim();
         
         const blob = new Blob([reporte], { type: 'text/plain' });
@@ -1122,210 +1178,34 @@ function openReportWindow() {
     window.open('/reporte-pruebas', '_blank', 'width=500,height=700');
 }
 
-// Función global para ejecutar pruebas exhaustivas con IA
-async function ejecutarPruebas() {
-    const resultadosDiv = document.getElementById('resultados-pruebas');
-    if (!resultadosDiv) {
-        console.error('Elemento resultados-pruebas no encontrado');
-        return;
-    }
-    
-    // Mostrar modal de progreso
-    mostrarModalProgreso();
-    
-    try {
-        const response = await fetch('/test-exhaustive', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        
-        // Cerrar modal de progreso
-        cerrarModalProgreso();
-        
-        // Mostrar resultados detallados
-        mostrarResultadosPruebas(data);
-        
-        // Guardar en localStorage para reportes
-        localStorage.setItem('reportePruebasBCR', JSON.stringify({
-            total: data.summary.total_tests,
-            fallos: data.summary.failed,
-            warnings: data.summary.warnings,
-            score: data.summary.security_score,
-            detalles: data.detailed_results.map(test => 
-                `${test.name}: ${test.status} (${test.vulnerability} vulnerability)`
-            ),
-            timestamp: new Date().toLocaleString(),
-            recomendaciones: data.recommendations
-        }));
-        
-    } catch (error) {
-        cerrarModalProgreso();
-        resultadosDiv.innerHTML = `
-            <div style="color: red; padding: 12px; background: #ffe6e6; border-radius: 8px; margin: 12px 0;">
-                ❌ Error al ejecutar pruebas: ${error.message}
-            </div>
-        `;
-    }
-}
-
-function mostrarModalProgreso() {
-    // Crear modal si no existe
-    let modal = document.getElementById('pruebasModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'pruebasModal';
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content" style="text-align: center; max-width: 500px;">
-                <div class="modal-header">
-                    <h3>🤖 IA Ejecutando Pruebas Exhaustivas</h3>
-                </div>
-                <div class="modal-body">
-                    <div class="ai-analysis-progress">
-                        <div class="progress-spinner"></div>
-                        <p id="progress-text">Iniciando análisis de seguridad...</p>
-                        <div class="progress-details">
-                            <small id="progress-detail">Preparando entorno de pruebas...</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-    
-    modal.style.display = 'block';
-    
-    // Simular progreso de IA
-    const textos = [
-        "Analizando vulnerabilidades de inyección SQL...",
-        "Verificando protección XSS...",
-        "Validando tokens CSRF...",
-        "Probando rate limiting...",
-        "Auditando sanitización de datos...",
-        "Verificando gestión de sesiones...",
-        "Analizando autenticación...",
-        "Probando autorización...",
-        "Verificando manejo de errores...",
-        "Evaluando seguridad de APIs...",
-        "Finalizando análisis..."
-    ];
-    
-    let index = 0;
-    const progressInterval = setInterval(() => {
-        if (index < textos.length) {
-            document.getElementById('progress-text').textContent = textos[index];
-            document.getElementById('progress-detail').textContent = `Paso ${index + 1} de ${textos.length}`;
-            index++;
-        } else {
-            clearInterval(progressInterval);
+// Función global para ejecutar pruebas exhaustivas (delegación al chat)
+async function ejecutarPruebasExhaustivas() {
+    if (window.bcr_chat && typeof window.bcr_chat.ejecutarPruebasExhaustivas === 'function') {
+        try {
+            await window.bcr_chat.ejecutarPruebasExhaustivas();
+        } catch (error) {
+            console.error('Error ejecutando pruebas exhaustivas desde función global:', error);
+            alert('Error ejecutando las pruebas exhaustivas. Por favor, intenta de nuevo.');
         }
-    }, 300);
-}
-
-function cerrarModalProgreso() {
-    const modal = document.getElementById('pruebasModal');
-    if (modal) {
-        modal.style.display = 'none';
+    } else {
+        console.error('Chat no inicializado o método no disponible');
+        alert('El sistema de chat no está listo. Por favor, recarga la página e intenta de nuevo.');
     }
 }
 
-function mostrarResultadosPruebas(data) {
-    const resultadosDiv = document.getElementById('resultados-pruebas');
-    
-    const scoreColor = data.summary.security_score >= 85 ? '#4caf50' : 
-                       data.summary.security_score >= 70 ? '#ff9800' : '#f44336';
-    
-    resultadosDiv.innerHTML = `
-        <div class="test-results">
-            <h3 style="color: #002b7f; margin-bottom: 16px;">📊 Resultados de Pruebas Exhaustivas</h3>
-            
-            <div class="score-summary" style="background: ${scoreColor}15; border: 2px solid ${scoreColor}; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <h4 style="margin: 0; color: ${scoreColor};">Puntuación de Seguridad</h4>
-                        <p style="margin: 4px 0; color: #666;">Nivel: ${data.ai_analysis.security_level}</p>
-                    </div>
-                    <div style="font-size: 2em; font-weight: bold; color: ${scoreColor};">
-                        ${data.summary.security_score}%
-                    </div>
-                </div>
-            </div>
-            
-            <div class="test-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px;">
-                <div style="background: #e8f5e8; padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 1.5em; color: #4caf50; font-weight: bold;">${data.summary.passed}</div>
-                    <div style="font-size: 0.9em; color: #666;">Aprobadas</div>
-                </div>
-                <div style="background: #fff3e0; padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 1.5em; color: #ff9800; font-weight: bold;">${data.summary.warnings}</div>
-                    <div style="font-size: 0.9em; color: #666;">Advertencias</div>
-                </div>
-                <div style="background: #ffebee; padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 1.5em; color: #f44336; font-weight: bold;">${data.summary.failed}</div>
-                    <div style="font-size: 0.9em; color: #666;">Fallos</div>
-                </div>
-            </div>
-            
-            <div class="ai-recommendations" style="background: #f3e5f5; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                <h4 style="margin: 0 0 12px 0; color: #7b1fa2;">🧠 Recomendaciones de IA</h4>
-                <ul style="margin: 0; padding-left: 20px;">
-                    ${data.recommendations.slice(0, 5).map(rec => `<li style="margin-bottom: 6px;">${rec}</li>`).join('')}
-                </ul>
-            </div>
-            
-            <div style="text-align: center; margin-top: 16px;">
-                <button onclick="verDetallesPruebas()" style="background: #1565c0; color: white; padding: 10px 20px; border: none; border-radius: 6px; margin: 5px; cursor: pointer;">
-                    Ver Detalles Completos
-                </button>
-                <button onclick="window.open('/reporte-pruebas', '_blank')" style="background: #ce1126; color: white; padding: 10px 20px; border: none; border-radius: 6px; margin: 5px; cursor: pointer;">
-                    Generar Reporte
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-function verDetallesPruebas() {
-    const data = JSON.parse(localStorage.getItem('reportePruebasBCR') || '{}');
-    if (data.detalles) {
-        alert("Detalles de Pruebas:\n\n" + data.detalles.join('\n'));
+// Funciones globales para compatibilidad con botones de resultados
+function verDetallesCompletosIA() {
+    if (window.bcr_chat && typeof window.bcr_chat.verDetallesCompletosIA === 'function') {
+        window.bcr_chat.verDetallesCompletosIA();
+    } else {
+        alert('El sistema de chat no está listo. Por favor, recarga la página e intenta de nuevo.');
     }
 }
 
-// Función mejorada para validación de dirección con GPS
-function validarDireccionConGPS() {
-    const direccionInput = document.getElementById('input');
-    const direccion = direccionInput.value.trim();
-    
-    if (direccion.length < 10) {
-        alert('Por favor ingresa una dirección más completa (mínimo 10 caracteres)');
-        return false;
+function exportarReporteIA() {
+    if (window.bcr_chat && typeof window.bcr_chat.exportarReporteIA === 'function') {
+        window.bcr_chat.exportarReporteIA();
+    } else {
+        alert('El sistema de chat no está listo. Por favor, recarga la página e intenta de nuevo.');
     }
-    
-    // Verificar si incluye componentes básicos
-    const componentesRequeridos = ['provincia', 'cantón', 'distrito'];
-    const tieneComponentes = componentesRequeridos.some(comp => 
-        direccion.toLowerCase().includes(comp.toLowerCase())
-    );
-    
-    if (!tieneComponentes) {
-        const usarGPS = confirm(
-            'Tu dirección parece incompleta. ¿Deseas:\n\n' +
-            '✅ SÍ - Usar GPS para obtener ubicación exacta\n' +
-            '❌ NO - Continuar con la dirección actual\n\n' +
-            'Se recomienda incluir: Provincia, Cantón, Distrito'
-        );
-        
-        if (usarGPS) {
-            bcr_chat.requestGPSLocation();
-            return true;
-        }
-    }
-    
-    return true;
 }

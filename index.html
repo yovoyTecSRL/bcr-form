@@ -23,12 +23,19 @@
         <div class="sub">Solicita tu tarjeta de crédito en minutos</div>
     </div>
 
-    <div class="nav" >
-        <a href="./pruebas-automaticas" class="button">🧪 Ver Pruebas Automáticas</a>
-        <a href="./reporte-pruebas" class="button">📊 Ver Reportes</a>
-        <button onclick="mostrarGuiaChat()" class="button guide-button">🤖 Guía con Chat IA</button>
-        <button onclick="ejecutarPruebasExhaustivas()" class="button ai-test-button">🔬 Pruebas IA Exhaustivas</button>
-        <button onclick="ejecutarPruebas()" class="button test-button">⚡ Ejecutar Pruebas</button>
+    <!-- Menú desplegable compacto -->
+    <div class="menu-container">
+        <button class="menu-toggle" onclick="toggleMenu()">
+            <span>📋 Herramientas</span>
+            <span class="menu-arrow">▼</span>
+        </button>
+        <div class="menu-dropdown" id="menuDropdown">
+            <a href="./pruebas-automaticas" class="menu-item">🧪 Pruebas Automáticas</a>
+            <a href="./reporte-pruebas" class="menu-item">📊 Reportes</a>
+            <button onclick="mostrarGuiaChat()" class="menu-item">🤖 Guía con IA</button>
+            <button onclick="ejecutarPruebasExhaustivas()" class="menu-item">🔬 Análisis IA</button>
+            <button onclick="ejecutarPruebas()" class="menu-item">⚡ Pruebas Rápidas</button>
+        </div>
     </div>
 
     <!-- Modal para Pruebas Exhaustivas -->
@@ -96,16 +103,34 @@
     <div class="footer">
         &copy; 2025 Banco Validación. Todos los derechos reservados.
     </div>
-    <div style="text-align:center; margin-top:24px;">
-        <button onclick="ejecutarPruebas()" style="background:#1565c0;color:#fff;padding:10px 20px;border:none;border-radius:6px;margin:5px;cursor:pointer;">
-            Ejecutar Pruebas Automáticas
-        </button>
-        <button onclick="verRecomendaciones()" style="background:#ce1126;color:#fff;padding:10px 20px;border:none;border-radius:6px;margin:5px;cursor:pointer;">
-            Ver Recomendaciones
-        </button>
-        <div id="resultados-pruebas" style="margin-top:18px; color:#222; font-size:1.05em;"></div>
-    </div>    <script src="./js/chat.js"></script>
+    <div id="resultados-pruebas" style="margin-top:18px; color:#222; font-size:1.05em;"></div>
+    <script src="./js/chat.js"></script>
     <script>
+        // Función para manejar el menú desplegable
+        function toggleMenu() {
+            const dropdown = document.getElementById('menuDropdown');
+            const arrow = document.querySelector('.menu-arrow');
+            
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+                arrow.textContent = '▼';
+            } else {
+                dropdown.style.display = 'block';
+                arrow.textContent = '▲';
+            }
+        }
+        
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            const menuContainer = document.querySelector('.menu-container');
+            const dropdown = document.getElementById('menuDropdown');
+            
+            if (!menuContainer.contains(event.target)) {
+                dropdown.style.display = 'none';
+                document.querySelector('.menu-arrow').textContent = '▼';
+            }
+        });
+        
         // Sistema de Guía de Chat IA
         let guiaChat = null;
         
@@ -209,7 +234,7 @@
                         (key === 'documentos' && lowerMessage.includes('documento')) ||
                         (key === 'validacion' && (lowerMessage.includes('valida') || lowerMessage.includes('proceso'))) ||
                         (key === 'tiempo' && (lowerMessage.includes('tiempo') || lowerMessage.includes('demora') || lowerMessage.includes('cuanto'))) ||
-                        (key === 'credito' && (lowerMessage.includes('limite') || lowerMessage.includes('monto'))) ||
+                         (key === 'credito' && (lowerMessage.includes('limite') || lowerMessage.includes('monto'))) ||
                         (key === 'ayuda' && (lowerMessage.includes('contacto') || lowerMessage.includes('telefono')))) {
                         return response;
                     }
@@ -275,61 +300,18 @@
         }
 
         async function ejecutarPruebasExhaustivas() {
-            mostrarModalPruebas();
-            
-            try {
-                const response = await fetch('/test-exhaustive', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const data = await response.json();
-                
-                document.getElementById('resultados-pruebas').innerHTML = `
-                    <div class="exhaustive-results">
-                        <h4>🔬 Análisis Exhaustivo con IA</h4>
-                        <div class="analysis-summary">
-                            <div class="metric">
-                                <span class="metric-label">Escenarios Probados:</span>
-                                <span class="metric-value">${data.total_scenarios}</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-label">Vulnerabilidades:</span>
-                                <span class="metric-value ${data.vulnerabilities > 0 ? 'error' : 'success'}">${data.vulnerabilities}</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-label">Score de Seguridad:</span>
-                                <span class="metric-value ${data.security_score < 80 ? 'warning' : 'success'}">${data.security_score}%</span>
-                            </div>
-                        </div>
-                        <div class="recommendations-ai">
-                            <h5>🤖 Recomendaciones de la IA:</h5>
-                            <ul>
-                                ${data.ai_recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div class="error-scenarios">
-                            <h5>⚠️ Escenarios de Error Detectados:</h5>
-                            <ul>
-                                ${data.error_scenarios.map(scenario => `<li><strong>${scenario.type}:</strong> ${scenario.description}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                `;
-                
-            } catch (error) {
-                console.error('Error en pruebas exhaustivas:', error);
-                document.getElementById('resultados-pruebas').innerHTML = `
-                    <div class="error-message">
-                        <h4>❌ Error en Pruebas Exhaustivas</h4>
-                        <p>No se pudieron ejecutar las pruebas exhaustivas. Verifica la conexión.</p>
-                    </div>
-                `;
+            // Delegar al método del chat con manejo de errores robusto
+            if (window.bcr_chat && typeof window.bcr_chat.ejecutarPruebasExhaustivas === 'function') {
+                try {
+                    await window.bcr_chat.ejecutarPruebasExhaustivas();
+                } catch (error) {
+                    console.error('Error ejecutando pruebas exhaustivas:', error);
+                    alert('Error ejecutando las pruebas exhaustivas. Por favor, intenta de nuevo.');
+                }
+            } else {
+                console.error('Chat no inicializado o método no disponible');
+                alert('El sistema de chat no está listo. Por favor, recarga la página e intenta de nuevo.');
             }
-            
-            ocultarModalPruebas();
         }
 
         function mostrarModalPruebas() {
