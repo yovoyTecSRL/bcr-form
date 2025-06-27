@@ -1,1 +1,32 @@
+name: Ejecutar pruebas con IA
+
+on:
+  push:
+    branches: [ main, bcr-form-v2 ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🧾 Clonar el repositorio
+      uses: actions/checkout@v4
+
+    - name: 🐍 Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: 📦 Instalar dependencias
+      run: |
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: ✅ Ejecutar pruebas automáticas
+      run: |
+        source .venv/bin/activate
+        pytest test_api.py
 
