@@ -192,3 +192,16 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Environment variables (mantener seguras las API keys)
+.env
+
+# Backup files específicos del proyecto
+backup-*.tar.gz
+*.zip.backup
+bcr-form-backup-*
+bcr-form-completo-*
+
+# Archivos de configuración sensibles
+config.json
+secrets.json
