@@ -643,7 +643,7 @@ try:
     import openai
     openai.api_key = OPENAI_API_KEY
     OPENAI_AVAILABLE = OPENAI_API_KEY.startswith("sk-") and len(OPENAI_API_KEY) > 20
-    print(f"📡 OpenAI configurado: {'✅ Disponible con API real' if OPENAI_AVAILABLE else '❌ Clave no válida'}")
+    print(f"📡 OpenAI configurado: {'✅ Disponible' if OPENAI_AVAILABLE else '❌ Clave no válida'}")
 except ImportError:
     OPENAI_AVAILABLE = False
     print("📡 OpenAI no instalado, usando IA simulada")
